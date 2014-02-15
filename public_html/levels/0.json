@@ -1,0 +1,25 @@
+{
+    "graphics": [{
+        "environment": [{
+            "type": "plane",
+            "background": "b00.png",
+            "color": "#0000aa",
+            "opacity": 1,
+            "position": {
+                "x": 0, "y": 0, "z": 10
+            }
+        }, {
+            "type": "plane",
+            "background": "b01.png",
+            "color": "#00aa00",
+            "opacity": 0.25,
+            "position": {
+                "x": 0, "y": 0, "z": 15
+            }
+        }],
+        "launcher": {
+            "type": "mesh",
+            "mesh": "default"
+        }
+    }]
+}
