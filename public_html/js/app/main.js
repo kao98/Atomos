@@ -1,6 +1,6 @@
 
-/*jslint           */
-/*global requirejs */
+/*jslint                     */
+/*global requirejs, _LI, _LD */
 
 // Main require.js configuration
 requirejs.config({
@@ -19,19 +19,23 @@ requirejs.config({
 
 // Start the main app logic.
 requirejs([
-    "G1",           //The main game class, as G1
+    "Atomos",           //The main game class, as G1
     "conf/config",  //The global configuration, as config
     "lib/Logger"    //The Looger, as Logger.
 
-], function (G1, config, Logger) {
+], function (Atomos, config) {
     "use strict";
 
-    Logger.info("Main initialization...");
-    Logger.debug("Global configuration: ", config);
+    _LI("==> WELCOME to Atomos! <==");
+    _LD("    Atomos configuration: ", config);
+    
+    if (config.devMode) {
+        _LD("    /!\\ DEVMODE Activated /!\\");
+    }
 
-    var theGame = new G1();
+    var theGame = new Atomos();
 
-    Logger.info("...Initialization over. Start looping...");
+    _LI("==> Atomos is ready. Enjoy! ;) <==");
 
     theGame.loop();
 
