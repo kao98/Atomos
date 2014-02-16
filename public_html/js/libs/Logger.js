@@ -1,6 +1,6 @@
 
-/*jslint                        */
-/*global define, console, alert */
+/*jslint                                */
+/*global define, console, alert, window */
 
 define([
     "conf/config"   //Global configuration
@@ -9,73 +9,94 @@ define([
     "use strict";
 
     var emptyFunction = function () { return null; },
-        Logger = {};
 
-    if (!config.log.active) {
+        testLevel = function (level) {
 
-        Logger.debug = emptyFunction;
-        Logger.info = emptyFunction;
+            if (config.log.level === "crazy") {
+                return true;
+            }
 
-    } else {
-
-        Logger.testLevel = function (level) {
-
-            if (config.log.level === "all") {
+            if (level !== "crazy" && (config.log.level === "all" || config.devMode)) {
                 return true;
             }
 
             switch (config.log.level) {
+                
             case "debug":
-                if (level === "debug" || level === "info") {
-                    return true;
-                }
-                break;
+                return level === "debug"
+                    || level === "info"
+                    || level === "error";
 
             case "info":
-                if (level === "info") {
-                    return true;
-                }
-                break;
+                return level === "info"
+                    || level === "error";
+
+            case "error":
+                return level === "error";
+
             }
 
             return false;
-        };
+        },
 
-        Logger.log = (function () {
-            if (Logger.testLevel("all")) {
+        getLogFunction = function (level, method) {
+
+            if (method === undefined) {
+                method = level;
+            }
+
+            if (testLevel(level)) {
+                if (console.hasOwnProperty(method) && typeof console[method] === "function") {
+                    return function () {
+                        console[method].apply(console, arguments);
+                    };
+                }
                 return function () {
                     console.log.apply(console, arguments);
                 };
             }
             return emptyFunction;
-        }());
+        },
 
-        Logger.info = function () {
-            if (console.info && typeof console.info === "function") {
-                console.info.apply(console, arguments);
-            } else {
-                console.log.apply(console, arguments);
-            }
+        Logger = {};
+
+    if (!config.log.active) {
+
+        Logger.log = emptyFunction;
+        Logger.debug = emptyFunction;
+        Logger.info = emptyFunction;
+        Logger.error = emptyFunction;
+        Logger.crazy = emptyFunction;
+        Logger.alert = function (message) {
+            alert(message);
         };
 
-        Logger.debug = (function () {
-            if (Logger.testLevel("debug")) {
-                return function () {
-                    if (console.debug && typeof console.debug === "function") {
-                        console.debug.apply(console, arguments);
-                    } else {
-                        console.log.apply(console, arguments);
-                    }
-                };
-            }
-            return emptyFunction;
-        }());
+    } else {
+
+        Logger.testLevel = function (level) {
+            return testLevel(level);
+        };
+
+        Logger.crazy = getLogFunction("crazy", "log");
+        Logger.log = getLogFunction("all", "log");
+        Logger.info = getLogFunction("info");
+        Logger.debug = getLogFunction("debug");
+        Logger.error = getLogFunction("error");
 
         Logger.alert = function (message, logMessage) {
             alert(message);
-            console.debug(logMessage);
+            this.debug(logMessage);
         };
     }
+
+    window.LOGGER = Logger;
+    window._L = Logger;
+    window._LD = Logger.debug;
+    window._LL = Logger.log;
+    window._LI = Logger.info;
+    window._LE = Logger.error;
+    window._LA = Logger.alert;
+    window._LC = Logger.crazy;
 
     return Logger;
 });
