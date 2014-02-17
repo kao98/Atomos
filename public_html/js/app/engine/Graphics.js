@@ -311,7 +311,7 @@ define([
 
         var renderable = new THREE.Mesh(
             new THREE.CubeGeometry(object.properties.width, object.properties.height, object.properties.depth),
-            new THREE.MeshLambertMaterial({color: object.properties.color, opacity: 1, transparent: false })
+            new THREE.MeshLambertMaterial({color: object.properties.color, opacity: 1, transparent: false, overdraw: this.options.renderer === "Canvas"})
         );
 
         renderable.position.x = object.properties.x;
