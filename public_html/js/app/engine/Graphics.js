@@ -14,17 +14,33 @@ define([
      * Graphics engine constructor
      * @returns {_L10.GraphicsEngine}
      */
-    var GraphicsEngine = function () {
+    var GraphicsEngine = function (options) {
 
-        this.devMode = config.devMode || false;
+        this.devMode    = config.devMode || false;
+        this.insane     = this.devMode && config.insaneDevMode;
+        this.options    = options || config.options.graphics || {};
 
-        _LI("==> Initializing the graphics engine");
+        _LI("==> Initializing the graphics engine.");
         if (this.devMode) {
-            _LD("    == devMode activated == ");
+            if (this.insane) {
+                _LD("    == ** devMode activated ** INSANE ** == ");
+            } else {
+                _LD("    == devMode activated == ");
+            }
         }
+
+//TODO: check the WebGL availability
+        this.options.renderer = 
+            this.options.renderer === "Canvas" || this.options.renderer === "WebGL"
+            ? this.options.renderer
+            : "Canvas";
+
+        _LI("    GraphicsEngine() Graphics options: ", this.options);
 
         this.width  = window.innerWidth;
         this.height = window.innerHeight;
+
+        _LD("    GraphicsEngine() Width: " + this.width + " - height: " + this.height);
 
         this.gameScene          = null;
         this.scene              = null;
@@ -99,7 +115,12 @@ define([
 
         _LD("    >Initializing the renderer...");
 
-        this.renderer = new THREE.CanvasRenderer();
+        if (this.options.renderer === "WebGL") {
+            this.renderer = new THREE.WebGLRenderer();
+        } else {
+            this.renderer = new THREE.CanvasRenderer();
+        }
+        
         this.renderer.setSize(this.width, this.height);
         
 //TODO: set the clear color in the scene, depending levels
@@ -221,7 +242,7 @@ define([
         };
         
         
-        if (this.devMode) {
+        if (this.insane) {
             this.controlsHelper.plane.visible = true;
         } else {
             this.controlsHelper.plane.visible = false;
