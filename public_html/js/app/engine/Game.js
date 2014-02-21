@@ -51,9 +51,9 @@ define([
                 }
             };
       
-        document.addEventListener('mousedown', onMouseDown);
-        document.addEventListener('mouseup', onMouseUp);
-        document.addEventListener('mousemove', onMouseMove);      
+        document.addEventListener('mousedown',  onMouseDown);
+        document.addEventListener('mouseup',    onMouseUp);
+        document.addEventListener('mousemove',  onMouseMove);      
         
     };
 
@@ -83,7 +83,8 @@ define([
         
         if (this.buttonDown) {
             this.scene.moveLauncher(event.clientX);     
-        } 
+        }
+        this.scene.rotateLauncher(event.clientX, event.clientY);
     };
 
     /**
@@ -98,7 +99,7 @@ define([
         
         var curTick = new Date().getTime();
         
-        this.scene.gameObjects[0].frame(this.tick);
+        this.scene.frame(this.tick);
 
         this.tick = curTick;
     };
