@@ -5,13 +5,15 @@
 define([
     "conf/config",
     "lib/Logger",
-    "lib/three"
+    "lib/three",
+    "lib/TrackballControls"
 
 ], function (config) {
     "use strict";
 
     /**
      * Graphics engine constructor
+     * @param options
      * @returns {_L10.GraphicsEngine}
      */
     var GraphicsEngine = function (options) {
@@ -53,6 +55,24 @@ define([
             .initCamera()
             .initControlsHelper();
 
+        //Trackball is used by viewers. Not compatible with the game neither the controlsHelper.
+        if (this.options.trackball) {
+
+            this.trackball = new THREE.TrackballControls( this.camera );
+
+            this.trackball.rotateSpeed = 1.0;
+            this.trackball.zoomSpeed = 1.2;
+            this.trackball.panSpeed = 0.8;
+
+            this.trackball.noZoom = false;
+            this.trackball.noPan = false;
+
+            this.trackball.staticMoving = true;
+            this.trackball.dynamicDampingFactor = 0.3;
+
+            this.trackball.keys = [ 65, 83, 68 ];
+        }
+
         document.body.appendChild(this.renderer.domElement);
 
         _LI("<== Graphics engine shoud be initialized now.");
@@ -72,14 +92,10 @@ define([
         if (this.devMode) {
             this.scene.add(new THREE.AxisHelper(100));
         }
-//TODO: add lights in the scene and not in the graphics engine
-        var ambientLight        = new THREE.AmbientLight(0x555555),
-            directionalLight    = new THREE.DirectionalLight(0xffffff);
-
-        directionalLight.position.set(-0.1, 0.25, -1).normalize();
-
-        this.scene.add(ambientLight);
-        this.scene.add(directionalLight);
+        
+        if (this.trackball) {
+            this.trackball.addEventListener('change', this.frame);
+        }
 
         _LD("    <Scene initialized");
 
@@ -95,10 +111,10 @@ define([
 
         _LD("    >Initializing the camera...");
 
-        this.camera = new THREE.PerspectiveCamera(65, this.width / this.height, 1, 10000);
+        this.camera = new THREE.PerspectiveCamera(18, this.width / this.height, 1, 15000);
 //TODO: the camera should be set from the scene or not?
-        this.camera.position.set(0, -400, 2500);
-        this.camera.lookAt({x: 0, y: -150, z: 0});
+        this.camera.position.set(0, 65, 7500);
+        this.camera.lookAt({x: 0, y: 65, z: 0});
         this.scene.add(this.camera);
 
         _LD("    <Camera initialized.");
@@ -115,8 +131,14 @@ define([
 
         _LD("    >Initializing the renderer...");
 
+        var that = this;
+        
         if (this.options.renderer === "WebGL") {
-            this.renderer = new THREE.WebGLRenderer();
+            this.renderer = new THREE.WebGLRenderer({antialias: true});
+            this.renderer.shadowMapEnabled = true;
+            this.renderer.shadowMapSoft = true;
+            this.renderer.shadowMapType = THREE.PCFSoftShadowMap;
+            this.renderer.physicallyBasedShading = true;
         } else {
             this.renderer = new THREE.CanvasRenderer();
         }
@@ -125,6 +147,24 @@ define([
         
 //TODO: set the clear color in the scene, depending levels
         this.renderer.setClearColor(0x020d30);
+
+        window.addEventListener('resize', function () {
+            
+            _LD("    .. Window resized ..");
+            
+            that.width =    window.innerWidth;
+            that.height =   window.innerHeight;
+            
+            that.renderer.setSize(that.width, that.height);
+            
+            if (that.camera !== null) {
+                that.camera.aspect = that.width / that.height;
+                that.camera.updateProjectionMatrix();
+            }
+            
+            _LD("    .. renderer resized ..");
+            
+        });
 
         _LD("    <Renderer initialized.");
 
@@ -147,11 +187,12 @@ define([
         this.controlsHelper = {
 
 
-            projector   : new THREE.Projector(),            
-            directions  : new THREE.Vector3(1, 1, 1),
-            object      : null,
+            projector           : new THREE.Projector(),            
+            directions          : new THREE.Vector3(1, 1, 1),
+            previousLookPosition: {x: 0, y: 0, z: 0},
+            object              : null,
         
-            plane       : new THREE.Mesh(
+            plane: new THREE.Mesh(
                     
                 new THREE.PlaneGeometry(3000, 3000, 30, 30),
                 new THREE.MeshBasicMaterial({
@@ -201,13 +242,15 @@ define([
              */
             frame: function () {
                 
+                var raycaster,
+                    intersects,
+                    vector;
+                
                 if (this.object && this.object.desiredScreenPosition !== null) {
 
                     _LC("    >ControlsHelper: new position desired: ", this.object.desiredScreenPosition);
 
-                    var raycaster,
-                        intersects,
-                        vector = new THREE.Vector3(
+                    vector = new THREE.Vector3(
                             this.object.desiredScreenPosition.x * this.directions.x,
                             this.object.desiredScreenPosition.y * this.directions.y,
                             this.object.desiredScreenPosition.z * this.directions.z
@@ -235,8 +278,40 @@ define([
                         
                     }
 
+                }
+                
+                if (this.object && this.object.lookAtPosition !== this.previousLookPosition) {
 
+                    _LC("    >ControlsHelper: new rotation desired: ", this.object.lookAtPosition);
 
+                    vector = new THREE.Vector3(
+                            this.object.lookAtPosition.x,
+                            this.object.lookAtPosition.y,
+                            0
+                        );
+                                                
+                    this.projector.unprojectVector(vector, engine.camera);
+                    
+                    raycaster = new THREE.Raycaster(
+                        engine.camera.position,
+                        vector.sub(engine.camera.position).normalize()
+                    );
+
+                    intersects = raycaster.intersectObject(this.plane);
+                    
+                    if (intersects && intersects.length > 0) {
+                    
+                        this.object.lookAt(intersects[0].point);
+                        
+                        _LC("    <ControlsHelper: new disired rotation calculated");
+                        
+                    } else {
+                        
+                        _LC("    <ControlsHelper: no new disired position (out of bounds).");
+                        
+                    }
+
+                    this.previousLookPosition = this.object.lookAtPosition;
                 }
             }
         };
@@ -307,20 +382,41 @@ define([
 
         _LD("    >GraphicsEngine::loadObject: ", object);
 
-//TODO: implement the proper to load objects
+//TODO: implement the proper way to load objects
 
-        var renderable = new THREE.Mesh(
-            new THREE.CubeGeometry(object.properties.width, object.properties.height, object.properties.depth),
-            new THREE.MeshLambertMaterial({color: object.properties.color, opacity: 1, transparent: false, overdraw: this.options.renderer === "Canvas"})
-        );
-
-        renderable.position.x = object.properties.x;
-        renderable.position.y = object.properties.y;
-        renderable.position.z = 0;
-
-        this.scene.add(renderable);
+        var that = this;
         
-        object.renderable = renderable;
+        object.create(
+                
+            function (object, renderable) {
+                
+                var i;
+                
+                if (that.options.renderer === "Canvas" && renderable.material) {
+                    if (renderable.material.overdraw) {
+                        renderable.overdraw = true;
+                    } else if (renderable.material.materials) {
+                        for (i = 0; i < renderable.material.materials.length; i++) {
+                            renderable.material.materials[i].overdraw = true;
+                        }
+                    }
+                }
+
+                if (Object.prototype.toString.call(renderable) !== '[object Array]') {
+                    that.scene.add(renderable);
+                } else {
+                    for (i = 0; i < renderable.length; i++) {
+                        that.scene.add(renderable[i]);
+                    }
+                }                
+
+                object.renderable = renderable;
+
+                _LD("    ..<GraphicsEngine::loadObject: '" + object.name + "' loaded.");
+
+            }
+                
+        );
 
         _LD("    <GraphicsEngine::loadObject.");
 
@@ -336,7 +432,13 @@ define([
             return;
         }
 
-        this.controlsHelper.frame();
+        if (this.trackball) {
+            this.trackball.update();
+        }
+
+        if (this.controlsHelper) {
+            this.controlsHelper.frame();
+        }
         
         this.renderer.render(this.scene, this.camera);
     };
