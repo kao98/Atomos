@@ -64,7 +64,7 @@ define([
          */
         loadLevel: function (levelNumber) {
             
-            _LI("    >Atomos::loadLevel: " + levelNumber !== undefined ? levelNumber : this.levelNumber);
+            _LI("    >Atomos::loadLevel: " + (levelNumber !== undefined ? levelNumber : this.currentLevel));
             
             if (levelNumber !== undefined) {
                 this.currentLevel = levelNumber;
@@ -74,7 +74,7 @@ define([
             this.graphics.loadScene(this.scene);
             this.game.setScene(this.scene);
             
-            this.graphics.controlsHelper.attach(this.scene.gameObjects[0], {x: 1, y: 0, z: 0});
+            this.graphics.controlsHelper.attach(this.scene.launcher, {x: 1, y: 0, z: 0});
             
             _LI("    <Atomos::loadLevel");
         },
