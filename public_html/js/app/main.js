@@ -13,7 +13,8 @@ requirejs.config({
     paths: {
         lib:    '../libs',
         conf:   '../config',
-        config: '../config'
+        config: '../config',
+        assets: '../../assets'
     }
 });
 
