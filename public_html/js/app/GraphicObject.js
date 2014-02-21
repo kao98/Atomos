@@ -37,7 +37,7 @@ define([
     GameObject.prototype.extend(GraphicObject);
     
     GraphicObject.prototype.extend = function (child) {
-        var Surrogate = function () {  };
+        var Surrogate = function () { return; };
         Surrogate.prototype = GraphicObject.prototype;
         child.prototype = new Surrogate();
     };

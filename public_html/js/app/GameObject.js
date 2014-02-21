@@ -2,18 +2,16 @@
 /*jslint        */
 /*global define */
 
-define([
-    "lib/Logger"
-
-], function (Logger) {
+define([], function () {
     "use strict";
 
     var GameObject = function (name) {
 
         this.name = name;
-        
+
         this.extend = function (child) {
-            for (var p in this) {
+            var p;
+            for (p in this) {
                 if (this.hasOwnProperty(p)) {
                     child[p] = this[p];
                 }
@@ -22,7 +20,7 @@ define([
     };
 
     GameObject.prototype.extend = function (child) {
-        var Surrogate = function () { Logger.log(" -- Extending GameObject -- "); };
+        var Surrogate = function () { return; };
         Surrogate.prototype = GameObject.prototype;
         child.prototype = new Surrogate();
     };
