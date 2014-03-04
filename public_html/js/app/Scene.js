@@ -269,11 +269,11 @@ define([
         
         //var ballMaterial = new CANNON.Material();
         
-        var sphere = new CANNON.Sphere(75);
+        var sphere = new CANNON.Sphere(140);
         this.sphereBody = new CANNON.RigidBody(0, sphere, this.getWorldDefaultMaterial());
         
-        this.sphereBody.position.set(this.launcher.properties.position.x, this.launcher.properties.position.y, this.launcher.properties.position.z);
-        
+        this.sphereBody.position.set(this.launcher.properties.position.x, -800, 0);
+        this.sphereBody.mesh = {type: 'launcher', object: this.launcher};
         this.world.add(this.sphereBody);
         /*
         var ballSphere = new CANNON.Sphere(25);
@@ -376,7 +376,7 @@ define([
             //this.sphereBody.position.copy(this.launcher.renderable.position);
             //this.ballBody.position.copy(this.ball.renderable[0].position);
             //this.ballBody.position.copy(this.ball.renderable[1].position);
-            this.sphereBody.position.set(this.launcher.properties.position.x, this.launcher.properties.position.y, this.launcher.properties.position.z);
+            this.sphereBody.position.x = this.launcher.properties.position.x;
             
             this.world.step((tick - previousTick) / 1000);
         }

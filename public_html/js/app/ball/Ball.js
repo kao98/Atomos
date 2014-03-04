@@ -37,10 +37,6 @@ define([
         
         this.ballMaterial = new CANNON.Material();
         this.body = new CANNON.RigidBody(50, new CANNON.Sphere(25), this.ballMaterial);
-        
-        /*var that = this;
-        window.setTimeout(function () {that.ballBody.velocity = new CANNON.Vec3(2500, 1500, 0);}, 1000);
-        */
        
         this.body.position.copy(this.properties.position);//.x, this.ball.properties.position.y, this.ball.properties.position.z);
         
@@ -137,6 +133,11 @@ define([
         
         this.body.velocity = new CANNON.Vec3(vector.x, vector.y, 0);
         
+    };
+
+    Ball.prototype.moveToLauncher = function () {
+        this.idle = true;
+        this.setPosition({x: this.scene.launcher.properties.position.x, y: this.properties.position.y, z: 0});
     };
 
     return Ball;

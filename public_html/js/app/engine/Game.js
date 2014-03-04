@@ -1,6 +1,6 @@
 
 /*jslint                        */
-/*global define, document, _LI  */
+/*global define, document, _LI, _LD  */
 
 define([
     "lib/Logger"
@@ -19,6 +19,7 @@ define([
         this.scene      = null;
         this.buttonDown = false;
         this.tick       = new Date().getTime();
+        this.firstBallCollision = false;
 
         this.listenEvents();
   
@@ -68,8 +69,8 @@ define([
       
         document.addEventListener('mousedown',  onMouseDown);
         document.addEventListener('mouseup',    onMouseUp);
-        document.addEventListener('mousemove',  onMouseMove);      
-        
+        document.addEventListener('mousemove',  onMouseMove);     
+                
     };
 
     /**
@@ -80,6 +81,19 @@ define([
     GameEngine.prototype.setScene = function (scene) {
 
         this.scene = scene;
+
+        var that = this,
+            onBallCollide = function (event) {
+                if (event.with.mesh && event.with.mesh.type === 'launcher') {
+                    if (that.firstBallCollision) {
+                        that.scene.ball.moveToLauncher();
+                    } else {
+                        that.firstBallCollision = true;
+                    }
+                }
+            };
+            
+        this.scene.ball.body.addEventListener('collide', onBallCollide);
 
     };
 
