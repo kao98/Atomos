@@ -1,0 +1,18 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 02.03.2014 15:35:52
+
+newmtl 17___Default
+	Ns 59.999996
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.810000 0.810000 0.810000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka ..\textures\lanceur_lightmap.jpg
+	map_Kd ..\textures\lanceur_diffuse.jpg
+	map_Ks ..\textures\lanceur_specular.jpg
+	map_Ke ..\textures\lanceur_selfillumination.jpg

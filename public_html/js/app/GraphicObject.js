@@ -1,10 +1,11 @@
 
-/*jslint                */
-/*global define, THREE  */
+/*jslint                        */
+/*global define, THREE, CANNON  */
 
 define([
     "GameObject",
-    "lib/three"
+    "lib/three",
+    "lib/cannon"
 
 ], function (GameObject) {
     "use strict";
@@ -47,12 +48,40 @@ define([
      * This method is intented to be overriden by instances / child classes.
      * @returns {THREE.Mesh}
      */
-    GraphicObject.prototype.create = function () {
+    GraphicObject.prototype.create = function (callback) {
         
-        var geometry = new THREE.CubeGeometry(10, 10, 10),
-            material = new THREE.MeshBasicMaterial({color: 0xCCCCCC, opacity: 1});
-    
-        return new THREE.Mesh(geometry, material);
+        var that        = this,
+            geometry    = null,
+            material    = null,
+            mesh        = null,
+            callbackFn  = function (pMesh) {
+                console.log(that);
+                if (that.properties.position) {
+                    pMesh.position.set(that.properties.position.x, that.properties.position.y, that.properties.position.z);
+                }
+                if (that.properties.rotation) {
+                    pMesh.rotation.set(that.properties.rotation.x, that.properties.rotation.y, that.properties.rotation.z);
+                }
+                if (callback) {
+                    callback(that, pMesh);
+                }
+            };
+        
+        if (this.properties.jsonFile) {
+            this.loadJSONMesh(this.properties.jsonFile, callbackFn);
+            
+        } else {
+
+            if (!this.properties.geometry) {
+                this.properties.geometry = {w: 10, h: 10, d: 10};
+            }
+            geometry = new THREE.CubeGeometry(this.properties.geometry.w, this.properties.geometry.h, this.properties.geometry.d);
+            material = new THREE.MeshLambertMaterial({color: 0xCCCCCC, opacity: 1});
+            mesh     = new THREE.Mesh(geometry, material);
+
+            callbackFn(mesh);
+
+        }
             
         
     };
@@ -69,18 +98,56 @@ define([
         
         loader.load(src, function (geometry, materials) {
 
-//TODO: Anisotropy
-//            for (var i = materials.length; i < materials.length; i++) {
-//                if (materials[i].map && materials[i].map.anisotropy) {
-//                    materials[i].map.anisotropy = 8;
-//                }
-//            }
-
             var material = new THREE.MeshFaceMaterial(materials),
                 mesh = new THREE.Mesh(geometry, material);
 
             callback(mesh);
         });
+        
+    };
+
+    /**
+     * Return the physic "body"
+     * @returns {undefined}
+     */
+    GraphicObject.prototype.getBody = function (options) {
+        
+        if (!this.body) {
+            
+            options = options || {};
+            
+            options.mass = options.mass || 0;
+            
+            options.geometry = options.geometry || {
+                w: this.properties.geometry.w / 2,
+                h: this.properties.geometry.h / 2,
+                d: this.properties.geometry.d / 2
+            };
+            
+            var box = new CANNON.Box(
+                new CANNON.Vec3(
+                    options.geometry.w,
+                    options.geometry.h,
+                    options.geometry.d
+                )
+            );
+            
+            if (options.material) {
+                this.body = new CANNON.RigidBody(options.mass, box, options.material);
+            } else {
+                this.body = new CANNON.RigidBody(options.mass, box);
+            }
+        }
+
+        if (options.position) {
+            this.body.position.set(
+                options.position.x,
+                options.position.y,
+                options.position.z
+            );
+        }
+
+        return this.body;
         
     };
 

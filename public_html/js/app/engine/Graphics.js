@@ -6,7 +6,14 @@ define([
     "conf/config",
     "lib/Logger",
     "lib/three",
-    "lib/TrackballControls"
+    "lib/TrackballControls",
+    "lib/ShaderExtras",
+    "lib/postprocessing/BloomPass",
+    "lib/postprocessing/EffectComposer",
+    "lib/postprocessing/MaskPass",
+    "lib/postprocessing/RenderPass",
+    "lib/postprocessing/SavePass",
+    "lib/postprocessing/ShaderPass"
 
 ], function (config) {
     "use strict";
@@ -46,14 +53,26 @@ define([
 
         this.gameScene          = null;
         this.scene              = null;
+        this.glowScene          = null;
         this.camera             = null;
         this.renderer           = null;
         this.controlsHelper     = null;
+        this.glowComposer       = null;
+        this.finalComposer      = null;
+        
+        this.renderTargetParameters = {
+                minFilter: THREE.LinearFilter, 
+                magFilger: THREE.LinearFilter,
+                format: THREE.RGBFormat,
+                stencilBuffer: false
+            };
         
         this.initRenderer()
             .initScene()
             .initCamera()
-            .initControlsHelper();
+            .initControlsHelper()
+            .initGlowComposer()
+            .initFinalComposer();
 
         //Trackball is used by viewers. Not compatible with the game neither the controlsHelper.
         if (this.options.trackball) {
@@ -97,6 +116,10 @@ define([
             this.trackball.addEventListener('change', this.frame);
         }
 
+        this.glowScene = new THREE.Scene();
+        this.glowScene.add(new THREE.AmbientLight(0xffffff));
+        //this.glowScene.add(new THREE.AxisHelper(100));
+
         _LD("    <Scene initialized");
 
         return this;
@@ -117,6 +140,8 @@ define([
         this.camera.lookAt({x: 0, y: 65, z: 0});
         this.scene.add(this.camera);
 
+        this.glowScene.add(this.camera);
+
         _LD("    <Camera initialized.");
 
         return this;
@@ -134,7 +159,7 @@ define([
         var that = this;
         
         if (this.options.renderer === "WebGL") {
-            this.renderer = new THREE.WebGLRenderer({antialias: true});
+            this.renderer = new THREE.WebGLRenderer({/*antialias: false*/});
             this.renderer.shadowMapEnabled = true;
             this.renderer.shadowMapSoft = true;
             this.renderer.shadowMapType = THREE.PCFSoftShadowMap;
@@ -146,7 +171,7 @@ define([
         this.renderer.setSize(this.width, this.height);
         
 //TODO: set the clear color in the scene, depending levels
-        this.renderer.setClearColor(0x020d30);
+        //this.renderer.setClearColor(0x020d30);
 
         window.addEventListener('resize', function () {
             
@@ -168,6 +193,135 @@ define([
 
         _LD("    <Renderer initialized.");
 
+        return this;
+    };
+
+    GraphicsEngine.prototype.addGlow = function (mesh) {
+        //return;
+        var hblur       = THREE.ShaderExtras["horizontalBlur"],
+            vblur       = THREE.ShaderExtras["verticalBlur"],
+            bluriness   = 2;
+    
+        hblur.uniforms["h"].value = bluriness / this.width;
+        vblur.uniforms["v"].value = bluriness / this.height;
+        
+        hblur.uniforms["tDiffuse"] = {type: "t", value: mesh.material.map};//THREE.ImageUtils.loadTexture('assets/launcher/lanceur_selfillumination.jpg')};
+        vblur.uniforms["tDiffuse"] = {type: "t", value: mesh.material.map};//THREE.ImageUtils.loadTexture('assets/launcher/lanceur_selfillumination.jpg')};
+        //vblur.uniforms["tDiffuse"] = {type: "t", value: THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile)};
+        /*hblur.uniforms["tDiffuse"].texture = THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile);
+        vblur.uniforms["tDiffuse"].value = THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile);
+        vblur.uniforms["tDiffuse"].texture = THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile);*/
+        //vblur.uniforms["tDiffuse"].texture = mesh.material.map.__webglTexture;
+        
+        //if (!mesh.material.materials) {
+            var materials = new THREE.MeshFaceMaterial();//[mesh.material]);
+            mesh.material = materials;
+        //}
+        
+        mesh.material.materials.push(
+            new THREE.ShaderMaterial({
+                uniforms: hblur.uniforms,
+                vertexShader: hblur.vertexShader,
+                fragmentShader: hblur.fragmentShader
+            })
+        );
+
+        mesh.material.materials.push(
+            new THREE.ShaderMaterial({
+                uniforms: vblur.uniforms,
+                vertexShader: vblur.vertexShader,
+                fragmentShader: vblur.fragmentShader
+            })
+        );
+
+        console.log("glowed mesh: ", mesh);
+/*
+        return new THREE.Mesh(mesh.geometry, 
+            new THREE.MeshFaceMaterial(
+            [
+            new THREE.ShaderMaterial({
+                uniforms: hblur.uniforms,
+                vertexShader: hblur.vertexShader,
+                fragmentShader: hblur.fragmentShader
+            }),
+            new THREE.ShaderMaterial({
+                uniforms: vblur.uniforms,
+                vertexShader: vblur.vertexShader,
+                fragmentShader: vblur.fragmentShader
+            })
+        ]));*/
+        //mesh.material.materials.push(vblur);
+        
+    };
+
+    GraphicsEngine.prototype.initGlowComposer = function () {
+        
+        var renderTargetGlow = new THREE.WebGLRenderTarget(this.width, this.height, this.renderTargetParameters),
+            hblur           = new THREE.ShaderPass(THREE.ShaderExtras["horizontalBlur"]),
+            vblur           = new THREE.ShaderPass(THREE.ShaderExtras["verticalBlur"]),
+            bluriness       = 2,
+            renderModelGlow = null;
+    
+        hblur.uniforms["h"].value = bluriness / this.width;
+        vblur.uniforms["v"].value = bluriness / this.height;
+        
+        renderModelGlow = new THREE.RenderPass(this.glowScene, this.camera);
+        this.glowComposer = new THREE.EffectComposer(this.renderer, renderTargetGlow);
+        
+        this.glowComposer.addPass(renderModelGlow);
+        this.glowComposer.addPass(hblur);
+        this.glowComposer.addPass(vblur);
+        this.glowComposer.addPass(hblur);
+        this.glowComposer.addPass(vblur);
+        
+        return this;
+    };
+    
+    GraphicsEngine.prototype.initFinalComposer = function () {
+        
+        var finalShader = {
+                uniforms: {
+                    tDiffuse: { type: "t", value: null },
+                    tGlow: { type: "t", value: 1 }
+                },
+
+                vertexShader: [
+                    "varying vec2 vUv;",
+                    "void main() {",
+                        "vUv = vec2( uv.x, uv.y);",
+                        "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+                    "}"
+                ].join("\n"),
+
+                fragmentShader: [
+                    "uniform sampler2D tDiffuse;",
+                    "uniform sampler2D tGlow;",
+                    "varying vec2 vUv;",
+                    "void main() {",
+                        "vec4 texel = texture2D(tDiffuse, vUv);",
+                        "vec4 glow = texture2D(tGlow, vUv);",
+                        "gl_FragColor = texel + vec4(0.5, 0.75, 1.0, 1.0) * glow * 2.0;",
+                    "}"
+                ].join("\n")
+            };
+        
+        finalShader.uniforms["tGlow"].value = this.glowComposer.renderTarget2;
+        
+        var renderModel = new THREE.RenderPass(this.scene, this.camera),
+            finalPass = new THREE.ShaderPass(finalShader),
+            renderTarget = new THREE.WebGLRenderTarget(this.width, this.height, this.renderTargetParameters),
+            effectFXAA = new THREE.ShaderPass(THREE.ShaderExtras["fxaa"]);
+    
+        finalPass.needsSwap = true;
+        finalPass.renderToScreen = true;
+        
+        effectFXAA.uniforms['resolution'].value.set(1 / this.width, 1 / this.height);
+        
+        this.finalComposer = new THREE.EffectComposer(this.renderer, renderTarget);
+        this.finalComposer.addPass(renderModel);
+        this.finalComposer.addPass(effectFXAA);
+        this.finalComposer.addPass(finalPass);
+        
         return this;
     };
 
@@ -327,6 +481,8 @@ define([
         
         _LD("    <Controls helper initialized.");
         
+        return this;
+        
     };
 
 
@@ -388,27 +544,127 @@ define([
         
         object.create(
                 
-            function (object, renderable) {
+            function (object, renderable, glow) {
                 
-                var i;
-                
-                if (that.options.renderer === "Canvas" && renderable.material) {
-                    if (renderable.material.overdraw) {
-                        renderable.overdraw = true;
-                    } else if (renderable.material.materials) {
-                        for (i = 0; i < renderable.material.materials.length; i++) {
-                            renderable.material.materials[i].overdraw = true;
-                        }
-                    }
-                }
+                var i, j;
 
                 if (Object.prototype.toString.call(renderable) !== '[object Array]') {
+                                        
+                    if (that.options.renderer === "Canvas" && renderable.material) {
+                    
+                        if (renderable.material.materials) {
+                            for (i = 0; i < renderable.material.materials.length; i++) {
+                                renderable.material.materials[i].overdraw = true;
+                            }
+                        } else {
+                            renderable.material.overdraw = true;
+                        }
+
+                    } else {
+                        if (renderable.material && renderable.material.materials) {
+                            for (i = 0; i < renderable.material.materials.length; i++) {
+                                if (renderable.material.materials[i].map) {
+                                    renderable.material.materials[i].map.anisotropy = that.renderer.getMaxAnisotropy();
+                                }
+                                if (renderable.material.materials[i].bumpMap) {
+                                    renderable.material.materials[i].bumpMap.anisotropy = that.renderer.getMaxAnisotropy();
+                                }
+                                if (renderable.material.materials[i].specularMap) {
+                                    renderable.material.materials[i].specularMap.anisotropy = that.renderer.getMaxAnisotropy();
+                                }
+                            }
+                        } else {
+                            if (renderable.material && renderable.material.map) {
+                                renderable.material.map.anisotropy = that.renderer.getMaxAnisotropy();
+                            }
+                            if (renderable.material && renderable.material.bumpMap) {
+                                renderable.material.bumpMap.anisotropy = that.renderer.getMaxAnisotropy();
+                            }
+                            if (renderable.material && renderable.material.specularMap) {
+                                renderable.material.specularMap.anisotropy = that.renderer.getMaxAnisotropy();
+                            }
+                        }
+
+                    }
+
                     that.scene.add(renderable);
+                    
+                    if (that.insane && renderable.geometry) {
+                        that.scene.add(new THREE.FaceNormalsHelper(renderable, 10));
+                        that.scene.add(new THREE.VertexNormalsHelper(renderable, 10));
+                        
+                        var helper = new THREE.WireframeHelper( renderable );
+                        helper.material.depthTest = false;
+                        helper.material.opacity = 0.25;
+                        helper.material.transparent = true;
+                        that.scene.add( helper );
+                    }
+                    
                 } else {
                     for (i = 0; i < renderable.length; i++) {
+                        
+                        if (that.options.renderer === "Canvas" && renderable[i].material) {
+
+                            if (renderable[i].material.materials) {
+                                for (j = 0; j < renderable[i].material.materials.length; j++) {
+                                    renderable[i].material.materials[j].overdraw = true;
+                                }
+                            } else {
+                                renderable[i].material.overdraw = true;
+                            }
+
+                        } else {
+                            if (renderable[i].material && renderable[i].material.materials) {
+                                for (j = 0; j < renderable[i].material.materials.length; j++) {
+                                    if (renderable[i].material && renderable[i].material.materials[j].map) {
+                                        renderable[i].material.materials[j].map.anisotropy = that.renderer.getMaxAnisotropy();
+                                    }
+                                    if (renderable[i].material && renderable[i].material.materials[j].bumpMap) {
+                                        renderable[i].material.materials[j].bumpMap.anisotropy = that.renderer.getMaxAnisotropy();
+                                    }
+                                    if (renderable[i].material && renderable[i].material.materials[j].specularMap) {
+                                        renderable[i].material.materials[j].specularMap.anisotropy = that.renderer.getMaxAnisotropy();
+                                    }
+                                }
+                            } else {
+                                if (renderable[i].material && renderable[i].material.map) {
+                                    renderable[i].material.map.anisotropy = that.renderer.getMaxAnisotropy();
+                                }
+                                if (renderable[i].material && renderable[i].material.bumpMap) {
+                                    renderable[i].material.bumpMap.anisotropy = that.renderer.getMaxAnisotropy();
+                                }
+                                if (renderable[i].material && renderable[i].material.specularMap) {
+                                    renderable[i].material.specularMap.anisotropy = that.renderer.getMaxAnisotropy();
+                                }
+                            }
+
+                        }
+                        
                         that.scene.add(renderable[i]);
+                        
+                        if (that.insane && renderable[i].geometry) {
+                            that.scene.add(new THREE.FaceNormalsHelper(renderable[i], 10));
+                            that.scene.add(new THREE.VertexNormalsHelper(renderable[i], 10));
+                            
+                            var helper = new THREE.WireframeHelper( renderable[i] );
+                            helper.material.depthTest = false;
+                            helper.material.opacity = 0.25;
+                            helper.material.transparent = true;
+                            that.scene.add( helper );
+                        }
+                        
                     }
+
                 }                
+
+                console.log("glow !!!???", glow);
+                if (glow) {
+                    console.log("adding glow to the scene !!!");
+                    //that.addGlow(glow);
+                    console.log(glow);
+                    that.glowScene.add(glow);
+                    //that.glowScene.add(that.addGlow(glow));
+                }
 
                 object.renderable = renderable;
 
@@ -440,7 +696,11 @@ define([
             this.controlsHelper.frame();
         }
         
-        this.renderer.render(this.scene, this.camera);
+        this.glowComposer.render();
+        this.finalComposer.render();
+        
+        //this.renderer.render(this.glowScene, this.camera);
+        //this.renderer.render(this.scene, this.camera);
     };
 
     return GraphicsEngine;

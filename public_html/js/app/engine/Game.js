@@ -34,10 +34,14 @@ define([
         
         var that = this,
             onMouseMove = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
                 that.onMouseMove(event);
             },
         
             onMouseDown = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
                 if (event.which && event.which === 1) {
                     //The left mouse button is pressed
                     that.buttonDown = true;
@@ -46,10 +50,21 @@ define([
             },
             
             onMouseUp = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
                 if (event.which && event.which === 1) {
                     that.buttonDown = false;
+                //}
+                //if (event.which && event.which === 3) {
+                    that.scene.ball.launch();
+                    that.scene.launcher.lookAt();
+                    window.setTimeout(function () {
+                        that.scene.moveLauncher(event.clientX);
+                    }, 200);
                 }
             };
+      
+        document.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
       
         document.addEventListener('mousedown',  onMouseDown);
         document.addEventListener('mouseup',    onMouseUp);
@@ -75,16 +90,19 @@ define([
      */
     GameEngine.prototype.onMouseMove = function (event) {
         
-        event.preventDefault();
-        
         if (this.scene === null) {
             return;
         }
         
+        //if (this.buttonDown) {
+        
+        //}
         if (this.buttonDown) {
+            this.scene.rotateLauncher(event.clientX, event.clientY);
+        }
+        if (!this.buttonDown || !this.scene.ball.idle) {
             this.scene.moveLauncher(event.clientX);     
         }
-        this.scene.rotateLauncher(event.clientX, event.clientY);
     };
 
     /**
@@ -99,7 +117,7 @@ define([
         
         var curTick = new Date().getTime();
         
-        this.scene.frame(this.tick);
+        this.scene.frame(curTick, this.tick);
 
         this.tick = curTick;
     };

@@ -14,7 +14,7 @@ define(function () {
         },
         options: {
             graphics: {
-                renderer: "Canvas"
+                renderer: "WebGL"
             }
         }
     };

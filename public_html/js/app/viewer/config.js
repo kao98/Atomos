@@ -7,14 +7,14 @@ define(function () {
 
     return {
         devMode         : true,
-        insaneDevMode   : false,
+        insaneDevMode   : true,
         log: {
             active      : true,
             level       : "all"
         },
         options: {
             graphics: {
-                renderer: "Canvas"
+                renderer: "WebGL"
             }
         }
     };
