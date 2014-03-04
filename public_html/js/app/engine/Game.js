@@ -20,6 +20,7 @@ define([
         this.buttonDown = false;
         this.tick       = new Date().getTime();
         this.firstBallCollision = false;
+        this.launchStep = 0;
 
         this.listenEvents();
   
@@ -55,10 +56,14 @@ define([
                 event.stopPropagation();
                 if (event.which && event.which === 1) {
                     that.buttonDown = false;
-                //}
-                //if (event.which && event.which === 3) {
+                    if (that.scene.ball.idle) {
+                        that.launchStep++;
+                    }
+                }
+                if (that.launchStep >= 2) { //event.which && event.which === 3) {
                     that.scene.ball.launch();
                     that.scene.launcher.lookAt();
+                    that.launchStep = 0;
                     window.setTimeout(function () {
                         that.scene.moveLauncher(event.clientX);
                     }, 200);
@@ -111,10 +116,10 @@ define([
         //if (this.buttonDown) {
         
         //}
-        if (this.buttonDown) {
+        if (this.launchStep === 1) {
             this.scene.rotateLauncher(event.clientX, event.clientY);
         }
-        if (!this.buttonDown || !this.scene.ball.idle) {
+        if (this.launchStep !== 1 || !this.scene.ball.idle) {// !this.buttonDown || !this.scene.ball.idle) {
             this.scene.moveLauncher(event.clientX);     
         }
     };
