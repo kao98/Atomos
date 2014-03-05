@@ -272,7 +272,7 @@ define([
         var sphere = new CANNON.Sphere(140);
         this.sphereBody = new CANNON.RigidBody(0, sphere, this.getWorldDefaultMaterial());
         
-        this.sphereBody.position.set(this.launcher.properties.position.x, -800, 0);
+        this.sphereBody.position.set(this.launcher.properties.position.x, -900, 0);
         this.sphereBody.mesh = {type: 'launcher', object: this.launcher};
         this.world.add(this.sphereBody);
         /*

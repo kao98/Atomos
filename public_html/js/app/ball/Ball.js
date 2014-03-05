@@ -1,9 +1,10 @@
 
 /*jslint                */
-/*global define, THREE, CANNON  */
+/*global define, THREE, CANNON, TWEEN  */
 
 define([
     "GraphicObject",
+    "lib/tween.min",
     "lib/three",
     "lib/cannon"
 
@@ -112,6 +113,7 @@ define([
             this.body.position.copy(this.renderable.position);
             //this.body.position.copy(this.renderable[1].position);
         }
+        this.properties.position = this.renderable.position;
     };
 
     Ball.prototype.launch = function () {
@@ -129,7 +131,7 @@ define([
                 Math.cos(angle), -Math.sin(angle), 0,
                 Math.sin(angle), Math.cos(angle), 0,
                 0, 0, 1),
-            vector = new THREE.Vector3(0, 4000, 0).applyMatrix3(matrix);
+            vector = new THREE.Vector3(0, 3000, 0).applyMatrix3(matrix);
         
         this.body.velocity = new CANNON.Vec3(vector.x, vector.y, 0);
         
@@ -137,7 +139,52 @@ define([
 
     Ball.prototype.moveToLauncher = function () {
         this.idle = true;
-        this.setPosition({x: this.scene.launcher.properties.position.x, y: this.properties.position.y, z: 0});
+        
+        var that = this,
+            initialLauncherPosition = this.scene.launcher.properties.position,
+            xFactor = Math.random() > 0.5 ? 1 : -1;
+    
+        if (this.scene.launcher.properties.position.x > 400) {
+            xFactor = -1;
+        } else if (this.scene.launcher.properties.position.x < -400) {
+            xFactor = 1;
+        }
+        
+        new TWEEN.Tween({x: this.properties.position.x, y: this.properties.position.y, z: this.properties.position.z})
+            .to({
+                x: [
+                    this.properties.position.x,
+                    this.scene.launcher.properties.position.x,
+                    this.scene.launcher.properties.position.x + (200 * xFactor),
+                    this.scene.launcher.properties.position.x,
+                    this.scene.launcher.properties.position.x
+                ], 
+                y: [
+                    this.properties.position.y,
+                    -1000,
+                    -1000,
+                    -1000,
+                    -800
+                ], 
+                z: [
+                    0,
+                    200, 
+                    0,
+                    -200, 
+                    0
+                ]
+            }, 500)
+            .onUpdate(function () {
+                var launcherPosition = that.scene.launcher.properties.position;
+                that.setPosition({x: this.x + launcherPosition.x - initialLauncherPosition.x, y: this.y, z: this.z});
+            })
+            .onComplete(function () {
+                that.setPosition({x: that.scene.launcher.properties.position.x, y: -800, z: 0});
+            })
+            .interpolation(TWEEN.Interpolation.Bezier)
+            .easing(TWEEN.Easing.Circular.Out)
+            .start();
+        
     };
 
     return Ball;

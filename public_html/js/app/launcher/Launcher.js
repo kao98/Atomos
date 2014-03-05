@@ -155,11 +155,12 @@ define([
                 angle = Math.max(angle, -0.75);
             }
 
+            this.angle = angle;
         
             var qa = new THREE.Quaternion().setFromAxisAngle({x: 0, y: 1, z: 0}, this.renderable.rotation.y);
             var qb = new THREE.Quaternion().setFromAxisAngle({x: 0, y: 0, z: 1}, angle);
             var qm = new THREE.Quaternion().multiplyQuaternions(qb, qa);
-            this.angle = angle;
+            
             this.renderable.rotation.setFromQuaternion(qm);// .z = Math.atan((position.y - this.renderable.position.y) / (position.x - this.renderable.position.x));
             this.gMesh.rotation.setFromQuaternion(qm);
             
@@ -169,19 +170,22 @@ define([
             //console.log(this.renderable, this.gMesh);
         } else if (this.needRazRotation && !this.isMoving) {
             var that = this;
+            this.isMoving = true;
             this.tween2 = 
                 new TWEEN.Tween({x: this.renderable.rotation.x, y: this.renderable.rotation.y, z: this.renderable.rotation.z})
                     .easing(TWEEN.Easing.Circular.InOut)
-                    .to({x: 0, y: this.renderable.rotation.y, z: 0}, 200)
+                    .to({x: 0, y: this.renderable.rotation.y, z: 0}, 100)
                     .onUpdate(function () {
                         that.renderable.rotation.x = this.x;
                         that.renderable.rotation.z = this.z;
                         that.gMesh.rotation.x = this.x;
                         that.gMesh.rotation.z = this.z;
                     })
+                    .onComplete(function () {
+                        that.needRazRotation = false;
+                    })
                     .start();
             
-            this.needRazRotation = false;
         }
     };
 
@@ -192,7 +196,7 @@ define([
      */
     Launcher.prototype.setDesiredWorldPosition = function (position) {
                 
-        if (!this.renderable/* || !this.renderable[0]*/) {
+        if (!this.renderable || this.needRazRotation) {
             return;
         }
         
@@ -247,8 +251,6 @@ define([
      * @returns {undefined}
      */
     Launcher.prototype.frame = function () {
-        
-        TWEEN.update();
         
     };
 

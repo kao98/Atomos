@@ -1,10 +1,11 @@
 
 /*jslint                                                             */
-/*global define, window, document, THREE, LOGGER, _LI, _LD, _LE, _LC */
+/*global define, window, document, TWEEN, THREE, LOGGER, _LI, _LD, _LE, _LC */
 
 define([
     "conf/config",
     "lib/Logger",
+    "lib/tween.min",
     "lib/three",
     "lib/TrackballControls",
     "lib/ShaderExtras",
@@ -687,6 +688,8 @@ define([
         if (this.gameScene === null) {
             return;
         }
+
+        TWEEN.update();
 
         if (this.trackball) {
             this.trackball.update();

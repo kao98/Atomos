@@ -66,7 +66,7 @@ define([
                     that.launchStep = 0;
                     window.setTimeout(function () {
                         that.scene.moveLauncher(event.clientX);
-                    }, 200);
+                    }, 120);
                 }
             };
       
@@ -119,7 +119,7 @@ define([
         if (this.launchStep === 1) {
             this.scene.rotateLauncher(event.clientX, event.clientY);
         }
-        if (this.launchStep !== 1 || !this.scene.ball.idle) {// !this.buttonDown || !this.scene.ball.idle) {
+        if (this.launchStep < 1 || this.launchStep > 2 || !this.scene.ball.idle) {// !this.buttonDown || !this.scene.ball.idle) {
             this.scene.moveLauncher(event.clientX);     
         }
     };
