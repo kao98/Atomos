@@ -10,7 +10,7 @@ define([
     "lib/Logger",
     "lib/cannon"
 
-], function (GraphicObject, Light, Launcher, Ball) {
+], function (GraphicObject, Light, Launcher, Ball, LOGGER, CANNON) {
     "use strict";
 
     /**
@@ -229,8 +229,8 @@ define([
      * @returns {undefined}
      */
     Scene.prototype.addStaticLights = function () {
-        this.gameObjects.push(new Light("mainAmbient", "AmbientLight", 0xffffff));
-        //this.gameObjects.push(new Light("mainDirectional", "DirectionalLight", 0xffffff, {x: 0, y: 0.33, z: 1}, 0.8));
+        this.gameObjects.push(new Light("mainAmbient", "AmbientLight", 0x666666));
+        this.gameObjects.push(new Light("mainDirectional", "DirectionalLight", 0xffffff, {x: 0, y: 0.33, z: 1}, 1));
         
     };
 

@@ -7,7 +7,7 @@ define(function () {
 
     return {
         devMode         : true,
-        insaneDevMode   : true,
+        insaneDevMode   : false,
         log: {
             active      : true,
             level       : "all"

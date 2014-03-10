@@ -8,7 +8,7 @@ define([
     "lib/three",
     "lib/cannon"
 
-], function (GraphicObject) {
+], function (GraphicObject, t, t2, CANNON) {
     "use strict";
 
     /**
@@ -60,14 +60,53 @@ define([
      * @returns {undefined}
      */
     Ball.prototype.create = function (callback) {
-        
-        var light = new THREE.PointLight(0xffffff, 1, 400),
-            mesh  = new THREE.Mesh(
-                new THREE.SphereGeometry(25, 8, 8),
-                new THREE.MeshBasicMaterial({color: 0xffffff})
+
+        var ballShader = {
+                uniforms: {
+                },
+
+                vertexShader: [
+                    "varying vec2 pos;",
+                    "void main() {",
+                        //"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+                        "vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);",
+                        "pos = (projectionMatrix * mvPosition).xy;",
+                        "gl_PointSize = 50000.0 * (500.0 / length(mvPosition.xyz));",
+                        "gl_Position = projectionMatrix * mvPosition;",
+                    "}"
+                ].join("\n"),
+
+                fragmentShader: [
+                    "varying vec2 pos;",
+                    "void main() {",
+                        
+                        "vec2 position = gl_PointCoord - vec2(0.5, 0.5);",
+                        "vec3 light_color = vec3(0.5, 0.25, 0.125);",
+                        "float c = 0.005/length(position);",
+                        "gl_FragColor = vec4(vec3(c) * light_color, 1.5) ;",
+                    "}"
+                ].join("\n")
+            };
+
+
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+  
+        var light = new THREE.PointLight(0x7f3f1f, 2, 800),
+            mesh = new THREE.ParticleSystem(geometry, 
+                new THREE.ShaderMaterial({uniforms: ballShader.uniforms, vertexShader: ballShader.vertexShader, fragmentShader: ballShader.fragmentShader, blending: THREE.AdditiveBlending, transparent: true})
             );
         
-        callback(this, mesh);
+        //var light = new THREE.PointLight(0xffffff, 1, 400),
+        //    mesh  = new THREE.Mesh(
+        //        new THREE.SphereGeometry(1, 1, 1),
+        //        geometry,
+                //new THREE.ShaderMaterial({uniforms: ballShader.uniforms, vertexShader: ballShader.vertexShader, fragmentShader: ballShader.fragmentShader/*, blending: THREE.AdditiveBlending, transparent: true*/})
+                
+                //new THREE.MeshBasicMaterial({color: 0xffffff})
+//            );
+        
+        callback(this, [light, mesh]);
 
 
     };
@@ -79,10 +118,10 @@ define([
      */
     Ball.prototype.setPosition = function (position) {
         this.properties.position = position;
-        if (this.renderable) {
+        /*if (this.renderable) {
             this.renderable.position.set(position.x, position.y, position.z);
         }
-        return;
+        return;*/
         if (this.renderable && this.renderable.length > 0) {
             var i = 0;
             for (i; i < this.renderable.length; i++) {
@@ -110,10 +149,11 @@ define([
             
             this.setPosition(position);
         } else {
-            this.body.position.copy(this.renderable.position);
-            //this.body.position.copy(this.renderable[1].position);
+            //this.body.position.copy(this.renderable.position);
+            this.body.position.copy(this.renderable[0].position);
+            this.body.position.copy(this.renderable[1].position);
         }
-        this.properties.position = this.renderable.position;
+        this.properties.position = this.renderable[1].position;
     };
 
     Ball.prototype.launch = function () {
@@ -124,7 +164,7 @@ define([
         
         this.idle = false;
         
-        this.body.position.set(this.renderable.position.x, this.renderable.position.y, 0);
+        this.body.position.set(this.renderable[1].position.x, this.renderable[1].position.y, 0);
         
         var angle = this.scene.launcher.angle,
             matrix = new THREE.Matrix3(

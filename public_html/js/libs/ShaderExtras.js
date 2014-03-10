@@ -1778,10 +1778,35 @@ THREE.ShaderExtras = {
 
 		return values;
 
-	}
+	},
+
+        BallShader: {
+            uniforms: {
+                //surfacePosition: { type: "v2", value: new THREE.Vector2(0, 0) }
+            },
+
+            vertexShader: [
+                "varying vec2 surfacePosition;",
+                "void main() {",
+                    "surfacePosition = vec2( uv.x, uv.y);",
+                    "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+                "}"
+            ].join("\n"),
+
+            fragmentShader: [
+                "precision mediump float;",
+                "varying vec2 surfacePosition;",
+                "void main() {",
+                    "vec2 offset = vec2(0, 0);",
+                    "vec3 light_color = vec3(1, 0.5, 0.25);",
+                    "float master_scale = 0.012;",
+                    "float c = master_scale/(length(surfacePosition+offset));",
+                    "gl_FragColor = vec4(vec3(c) * light_color, 1.5);",
+                "}"
+            ].join("\n")
+        }
 
 };
-
 
 THREE.CopyShader = {
 

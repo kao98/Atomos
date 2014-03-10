@@ -7,7 +7,7 @@ define([
     "lib/three",
     "lib/cannon"
 
-], function (GameObject) {
+], function (GameObject, t, CANNON) {
     "use strict";
 
     /**

@@ -260,11 +260,13 @@ define([
         var renderTargetGlow = new THREE.WebGLRenderTarget(this.width, this.height, this.renderTargetParameters),
             hblur           = new THREE.ShaderPass(THREE.ShaderExtras["horizontalBlur"]),
             vblur           = new THREE.ShaderPass(THREE.ShaderExtras["verticalBlur"]),
+            ballShader      = new THREE.ShaderPass(THREE.ShaderExtras["BallShader"]),
             bluriness       = 2,
             renderModelGlow = null;
     
         hblur.uniforms["h"].value = bluriness / this.width;
         vblur.uniforms["v"].value = bluriness / this.height;
+        //ballShader.uniforms["surfacePosition"] = new THREE.Vector2(0, 0);
         
         renderModelGlow = new THREE.RenderPass(this.glowScene, this.camera);
         this.glowComposer = new THREE.EffectComposer(this.renderer, renderTargetGlow);
@@ -274,6 +276,7 @@ define([
         this.glowComposer.addPass(vblur);
         this.glowComposer.addPass(hblur);
         this.glowComposer.addPass(vblur);
+        this.glowComposer.addPass(ballShader);
         
         return this;
     };
@@ -283,7 +286,7 @@ define([
         var finalShader = {
                 uniforms: {
                     tDiffuse: { type: "t", value: null },
-                    tGlow: { type: "t", value: 1 }
+                    tGlow: { type: "t", value: 1 },
                 },
 
                 vertexShader: [
