@@ -123,7 +123,7 @@ define([
             this.scene.moveLauncher(event.clientX);     
         }
     };
-
+    
     /**
      * The frame method! :p
      * @returns {undefined}

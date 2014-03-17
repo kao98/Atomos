@@ -2,12 +2,6 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-
-define([
-    "lib/three"
-
-], function () {
-
 /**
  * @author alteredq / http://alteredqualia.com/
  */
@@ -63,5 +57,3 @@ THREE.SavePass.prototype = {
 	}
 
 };
-
-});

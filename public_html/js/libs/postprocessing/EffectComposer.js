@@ -2,12 +2,6 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-
-define([
-    "lib/three"
-
-], function () {
-
 /**
  * @author alteredq / http://alteredqualia.com/
  */
@@ -152,5 +146,3 @@ THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), nul
 
 THREE.EffectComposer.scene = new THREE.Scene();
 THREE.EffectComposer.scene.add( THREE.EffectComposer.quad );
-
-});

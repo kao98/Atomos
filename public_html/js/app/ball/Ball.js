@@ -5,7 +5,7 @@
 define([
     "GraphicObject",
     "lib/tween.min",
-    "lib/three",
+    "three",
     "lib/cannon"
 
 ], function (GraphicObject, t, t2, CANNON) {
@@ -97,15 +97,6 @@ define([
                 new THREE.ShaderMaterial({uniforms: ballShader.uniforms, vertexShader: ballShader.vertexShader, fragmentShader: ballShader.fragmentShader, blending: THREE.AdditiveBlending, transparent: true})
             );
         
-        //var light = new THREE.PointLight(0xffffff, 1, 400),
-        //    mesh  = new THREE.Mesh(
-        //        new THREE.SphereGeometry(1, 1, 1),
-        //        geometry,
-                //new THREE.ShaderMaterial({uniforms: ballShader.uniforms, vertexShader: ballShader.vertexShader, fragmentShader: ballShader.fragmentShader/*, blending: THREE.AdditiveBlending, transparent: true*/})
-                
-                //new THREE.MeshBasicMaterial({color: 0xffffff})
-//            );
-        
         callback(this, [light, mesh]);
 
 
@@ -149,11 +140,14 @@ define([
             
             this.setPosition(position);
         } else {
-            //this.body.position.copy(this.renderable.position);
             this.body.position.copy(this.renderable[0].position);
             this.body.position.copy(this.renderable[1].position);
         }
         this.properties.position = this.renderable[1].position;
+        
+        if (this.properties.position.y <= -1000) {
+            this.idle = true;
+        }
     };
 
     Ball.prototype.launch = function () {

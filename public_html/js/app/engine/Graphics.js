@@ -6,15 +6,15 @@ define([
     "conf/config",
     "lib/Logger",
     "lib/tween.min",
-    "lib/three",
-    "lib/TrackballControls",
-    "lib/ShaderExtras",
-    "lib/postprocessing/BloomPass",
-    "lib/postprocessing/EffectComposer",
-    "lib/postprocessing/MaskPass",
-    "lib/postprocessing/RenderPass",
-    "lib/postprocessing/SavePass",
-    "lib/postprocessing/ShaderPass"
+    "three",
+    "TrackballControls",
+    "ShaderExtras",
+    "BloomPass",
+    "EffectComposer",
+    "MaskPass",
+    "RenderPass",
+    "SavePass",
+    "ShaderPass"
 
 ], function (config) {
     "use strict";
@@ -141,7 +141,7 @@ define([
         this.camera.lookAt({x: 0, y: 65, z: 0});
         this.scene.add(this.camera);
 
-        this.glowScene.add(this.camera);
+        //this.glowScene.add(this.camera);
 
         _LD("    <Camera initialized.");
 
@@ -195,64 +195,6 @@ define([
         _LD("    <Renderer initialized.");
 
         return this;
-    };
-
-    GraphicsEngine.prototype.addGlow = function (mesh) {
-        //return;
-        var hblur       = THREE.ShaderExtras["horizontalBlur"],
-            vblur       = THREE.ShaderExtras["verticalBlur"],
-            bluriness   = 2;
-    
-        hblur.uniforms["h"].value = bluriness / this.width;
-        vblur.uniforms["v"].value = bluriness / this.height;
-        
-        hblur.uniforms["tDiffuse"] = {type: "t", value: mesh.material.map};//THREE.ImageUtils.loadTexture('assets/launcher/lanceur_selfillumination.jpg')};
-        vblur.uniforms["tDiffuse"] = {type: "t", value: mesh.material.map};//THREE.ImageUtils.loadTexture('assets/launcher/lanceur_selfillumination.jpg')};
-        //vblur.uniforms["tDiffuse"] = {type: "t", value: THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile)};
-        /*hblur.uniforms["tDiffuse"].texture = THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile);
-        vblur.uniforms["tDiffuse"].value = THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile);
-        vblur.uniforms["tDiffuse"].texture = THREE.ImageUtils.loadTexture(mesh.material.map.sourceFile);*/
-        //vblur.uniforms["tDiffuse"].texture = mesh.material.map.__webglTexture;
-        
-        //if (!mesh.material.materials) {
-            var materials = new THREE.MeshFaceMaterial();//[mesh.material]);
-            mesh.material = materials;
-        //}
-        
-        mesh.material.materials.push(
-            new THREE.ShaderMaterial({
-                uniforms: hblur.uniforms,
-                vertexShader: hblur.vertexShader,
-                fragmentShader: hblur.fragmentShader
-            })
-        );
-
-        mesh.material.materials.push(
-            new THREE.ShaderMaterial({
-                uniforms: vblur.uniforms,
-                vertexShader: vblur.vertexShader,
-                fragmentShader: vblur.fragmentShader
-            })
-        );
-
-        console.log("glowed mesh: ", mesh);
-/*
-        return new THREE.Mesh(mesh.geometry, 
-            new THREE.MeshFaceMaterial(
-            [
-            new THREE.ShaderMaterial({
-                uniforms: hblur.uniforms,
-                vertexShader: hblur.vertexShader,
-                fragmentShader: hblur.fragmentShader
-            }),
-            new THREE.ShaderMaterial({
-                uniforms: vblur.uniforms,
-                vertexShader: vblur.vertexShader,
-                fragmentShader: vblur.fragmentShader
-            })
-        ]));*/
-        //mesh.material.materials.push(vblur);
-        
     };
 
     GraphicsEngine.prototype.initGlowComposer = function () {

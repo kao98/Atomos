@@ -4,7 +4,7 @@
 
 define([
     "GameObject",
-    "lib/three",
+    "three",
     "lib/cannon"
 
 ], function (GameObject, t, CANNON) {

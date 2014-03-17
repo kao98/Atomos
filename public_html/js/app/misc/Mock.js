@@ -4,7 +4,7 @@
 
 define([
     "GraphicObject",
-    "lib/three"
+    "three"
 
 ], function (GraphicObject) {
     "use strict";

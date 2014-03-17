@@ -5,7 +5,7 @@
 define([
     "GraphicObject",
     "lib/tween.min",
-    "lib/three"
+    "three"
 
 ], function (GraphicObject) {
     "use strict";

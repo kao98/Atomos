@@ -3,11 +3,6 @@
  * @author Mark Lundin 	/ http://mark-lundin.com
  */
 
-define([
-    "lib/three"
-
-], function () {
-
 THREE.TrackballControls = function ( object, domElement ) {
 
 	var _this = this;
@@ -595,5 +590,3 @@ THREE.TrackballControls = function ( object, domElement ) {
 };
 
 THREE.TrackballControls.prototype = Object.create( THREE.EventDispatcher.prototype );
-
-});

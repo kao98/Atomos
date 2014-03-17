@@ -8,7 +8,8 @@ define([
     "launcher/Launcher",
     "ball/Ball",
     "lib/Logger",
-    "lib/cannon"
+    "lib/cannon",
+    "lib/tween.min"
 
 ], function (GraphicObject, Light, Launcher, Ball, LOGGER, CANNON) {
     "use strict";
@@ -135,6 +136,8 @@ define([
         
         _LD("    >Scene::addStatics");        
         
+        var that = this;
+        
         //The "top" border
         this.borders[0] = new GraphicObject(
             "border-0", 
@@ -170,7 +173,7 @@ define([
         );
         
         this.gameObjects.push(this.borders[2]);
-        
+        /*
         this.background = new GraphicObject(
             "background",
             {
@@ -183,14 +186,26 @@ define([
         this.gameObjects.push(
             this.background
         );
-        
-        this.gameObjects.push(new GraphicObject(
+        */
+        this.background = new GraphicObject(
             "background-2",
             {
-                jsonFile: "assets/tiles/tiles.js",
+                jsonFile: "assets/tiles/batch.js",
                 position:   {x: 0, y: -1250, z: 0},
             }
-        ));
+        );
+        this.gameObjects.push(this.background);
+        
+        this.backgroundTween = new TWEEN.Tween({x: 0});
+        this.backgroundTween
+                .easing(TWEEN.Easing.Linear.None)
+                .to({x: Math.PI * 2}, 720000)
+                .chain(this.backgroundTween)
+                .onUpdate(function () {
+                    if (that.background.renderable)
+                        that.background.renderable.rotation.y = this.x;
+                })
+                .start();
         
         //Finished :D
         

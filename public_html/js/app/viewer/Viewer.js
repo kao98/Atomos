@@ -7,7 +7,7 @@ define([
     "engine/Audio",     //The audio engine
     "Scene",            //The game Scene
     "viewer/config",
-    "lib/threeStats",   //To have the fpsMeter. Set the window.Stats global.
+    "threeStats",   //To have the fpsMeter. Set the window.Stats global.
     "lib/Logger"        //The global Logger, as Logger
 
 ], function (GraphicsEngine, AudioEngine, Scene, config) {
