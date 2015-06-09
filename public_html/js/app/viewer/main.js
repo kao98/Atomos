@@ -9,16 +9,13 @@ requirejs.config({
     baseUrl: 'js/app',
 
     shim: {
-        'three': {
-            exports: 'THREE'
-        },
+        'three': {},
         'threeStats': {
             deps: ['three'],
             exports: 'Stats'
         },
         'TrackballControls': {
             deps: ['three'],
-            exports: 'THREE.TrackballControls'
         },
         'ShaderExtras': {
             deps: ['three']

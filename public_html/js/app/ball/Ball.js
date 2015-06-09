@@ -165,7 +165,7 @@ define([
                 Math.cos(angle), -Math.sin(angle), 0,
                 Math.sin(angle), Math.cos(angle), 0,
                 0, 0, 1),
-            vector = new THREE.Vector3(0, 3000, 0).applyMatrix3(matrix);
+            vector = new THREE.Vector3(0, 3200, 0).applyMatrix3(matrix);
         
         this.body.velocity = new CANNON.Vec3(vector.x, vector.y, 0);
         

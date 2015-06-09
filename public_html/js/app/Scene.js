@@ -173,7 +173,7 @@ define([
         );
         
         this.gameObjects.push(this.borders[2]);
-        /*
+        
         this.background = new GraphicObject(
             "background",
             {
@@ -186,27 +186,27 @@ define([
         this.gameObjects.push(
             this.background
         );
-        */
+        
         this.background = new GraphicObject(
             "background-2",
             {
-                jsonFile: "assets/tiles/batch.js",
+                jsonFile: "assets/tiles/tiles.js",
                 position:   {x: 0, y: -1250, z: 0},
             }
         );
         this.gameObjects.push(this.background);
-        
+        /*
         this.backgroundTween = new TWEEN.Tween({x: 0});
         this.backgroundTween
                 .easing(TWEEN.Easing.Linear.None)
-                .to({x: Math.PI * 2}, 720000)
+                .to({x: Math.PI * 2}, 14400000 / 7) //42 :p
                 .chain(this.backgroundTween)
                 .onUpdate(function () {
                     if (that.background.renderable)
                         that.background.renderable.rotation.y = this.x;
                 })
                 .start();
-        
+        */
         //Finished :D
         
         _LD("    <Scene::addStatics.");
@@ -220,7 +220,7 @@ define([
         this.world.add(this.borders[0].getBody({
             geometry: {w: 650, h: 100,  d: 25},
             position: {x: 0,   y: 1200, z: 0 },
-            material: this.getWorldDefaultMaterial(),
+            material: this.getWorldDefaultMaterial()
         }));
 
         this.world.add(this.borders[1].getBody({

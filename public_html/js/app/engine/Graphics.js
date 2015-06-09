@@ -200,25 +200,26 @@ define([
     GraphicsEngine.prototype.initGlowComposer = function () {
         
         var renderTargetGlow = new THREE.WebGLRenderTarget(this.width, this.height, this.renderTargetParameters),
-            hblur           = new THREE.ShaderPass(THREE.ShaderExtras["horizontalBlur"]),
-            vblur           = new THREE.ShaderPass(THREE.ShaderExtras["verticalBlur"]),
-            ballShader      = new THREE.ShaderPass(THREE.ShaderExtras["BallShader"]),
-            bluriness       = 2,
+            hblur1           = new THREE.ShaderPass(THREE.ShaderExtras["horizontalBlur"]),
+            vblur1           = new THREE.ShaderPass(THREE.ShaderExtras["verticalBlur"]),
+            hblur2           = new THREE.ShaderPass(THREE.ShaderExtras["horizontalBlur"]),
+            vblur2           = new THREE.ShaderPass(THREE.ShaderExtras["verticalBlur"]),
             renderModelGlow = null;
     
-        hblur.uniforms["h"].value = bluriness / this.width;
-        vblur.uniforms["v"].value = bluriness / this.height;
-        //ballShader.uniforms["surfacePosition"] = new THREE.Vector2(0, 0);
+        hblur1.uniforms["h"].value = 1 / this.width;
+        vblur1.uniforms["v"].value = 1 / this.height;
+        hblur2.uniforms["h"].value = 2 / this.width;
+        vblur2.uniforms["v"].value = 2 / this.height;
         
         renderModelGlow = new THREE.RenderPass(this.glowScene, this.camera);
         this.glowComposer = new THREE.EffectComposer(this.renderer, renderTargetGlow);
         
         this.glowComposer.addPass(renderModelGlow);
-        this.glowComposer.addPass(hblur);
-        this.glowComposer.addPass(vblur);
-        this.glowComposer.addPass(hblur);
-        this.glowComposer.addPass(vblur);
-        this.glowComposer.addPass(ballShader);
+        this.glowComposer.addPass(hblur1);
+        this.glowComposer.addPass(vblur1);
+        this.glowComposer.addPass(renderModelGlow);
+        this.glowComposer.addPass(hblur2);
+        this.glowComposer.addPass(vblur2);
         
         return this;
     };

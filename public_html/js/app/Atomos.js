@@ -8,7 +8,7 @@ define([
     "engine/Audio",     //The audio engine
     "Scene",            //The game Scene
     "conf/config",
-    "lib/threeStats",   //To have the fpsMeter. Set the window.Stats global.
+    "threeStats",       //To have the fpsMeter. Set the window.Stats global.
     "lib/Logger"        //The global Logger, as Logger
 
 ], function (GameEngine, GraphicsEngine, AudioEngine, Scene, config) {
@@ -25,7 +25,10 @@ define([
         
         this.shouldStop     = false;    //Tells when we should stop the game
         this.currentLevel   = 0;        //The curent level
-        this.stats          = {begin: function () { return null; }, end: function () { return null; }};
+        this.stats          = {
+            begin:  function () { return null; }, 
+            end:    function () { return null; }
+        };
 
         if (config.devMode) {
             // ** Initialization of the stats module ** //

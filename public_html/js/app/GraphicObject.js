@@ -101,7 +101,7 @@ define([
             var material = new THREE.MeshFaceMaterial(materials),
                 mesh = new THREE.Mesh(geometry, material);
 
-            callback(mesh);
+            callback(mesh, geometry, materials);
         });
         
     };
