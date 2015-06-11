@@ -191,7 +191,7 @@ define([
             "background-2",
             {
                 jsonFile: "assets/tiles/tiles.js",
-                position:   {x: 0, y: -1250, z: 0},
+                position:   {x: 0, y: -1250, z: 0}
             }
         );
         this.gameObjects.push(this.background);

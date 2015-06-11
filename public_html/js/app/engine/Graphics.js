@@ -93,6 +93,8 @@ define([
             this.trackball.keys = [ 65, 83, 68 ];
         }
 
+        this.options.glowEffect = this.options.glowEffect || false;
+
         document.body.appendChild(this.renderer.domElement);
 
         _LI("<== Graphics engine shoud be initialized now.");
@@ -182,11 +184,16 @@ define([
             that.height =   window.innerHeight;
             
             that.renderer.setSize(that.width, that.height);
-            
+           
             if (that.camera !== null) {
                 that.camera.aspect = that.width / that.height;
                 that.camera.updateProjectionMatrix();
             }
+            
+            that
+                .initGlowComposer()
+                .initFinalComposer()
+            ;
             
             _LD("    .. renderer resized ..");
             
@@ -263,7 +270,6 @@ define([
         finalPass.renderToScreen = true;
         
         effectFXAA.uniforms['resolution'].value.set(1 / this.width, 1 / this.height);
-        
         this.finalComposer = new THREE.EffectComposer(this.renderer, renderTarget);
         this.finalComposer.addPass(renderModel);
         this.finalComposer.addPass(effectFXAA);
@@ -645,7 +651,10 @@ define([
             this.controlsHelper.frame();
         }
         
-        this.glowComposer.render();
+        if (this.options.glowEffect) {
+            this.glowComposer.render();
+        }
+        
         this.finalComposer.render();
         
         //this.renderer.render(this.glowScene, this.camera);

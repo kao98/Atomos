@@ -14,7 +14,8 @@ define(function () {
         },
         options: {
             graphics: {
-                renderer: "WebGL"
+                renderer: "WebGL",
+                glowEffect: true
             }
         }
     };
